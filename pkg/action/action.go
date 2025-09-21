@@ -171,6 +171,89 @@ func splitAndDeannotate(postrendered string) (map[string]string, error) {
 	return reconstructed, nil
 }
 
+func filterProcessOnlyTemplates(root *chart.Chart, patterns []string) (map[string]bool, error) {
+	matches := make(map[string]bool, len(patterns))
+	for _, pattern := range patterns {
+		matches[pattern] = false
+	}
+	if len(patterns) == 0 {
+		return matches, nil
+	}
+
+	rootPrefix := filepath.ToSlash(root.ChartFullPath())
+	if _, err := applyProcessOnlyFilters(root, patterns, matches, rootPrefix); err != nil {
+		return nil, err
+	}
+
+	return matches, nil
+}
+
+func applyProcessOnlyFilters(current *chart.Chart, patterns []string, matches map[string]bool, rootPrefix string) (bool, error) {
+	keep := false
+	filtered := make([]*common.File, 0, len(current.Templates))
+	hasPartial := false
+	chartPrefix := filepath.ToSlash(current.ChartFullPath())
+
+	for _, tmpl := range current.Templates {
+		tmplName := filepath.ToSlash(tmpl.Name)
+		fullPath := filepath.ToSlash(path.Join(chartPrefix, tmplName))
+		relPath := fullPath
+		if rootPrefix != "" {
+			relPath = strings.TrimPrefix(relPath, rootPrefix+"/")
+		}
+
+		matched := false
+		for _, pattern := range patterns {
+			ok, err := filepath.Match(pattern, relPath)
+			if err != nil {
+				return false, fmt.Errorf("invalid process-only pattern %q: %w", pattern, err)
+			}
+			if ok {
+				matches[pattern] = true
+				matched = true
+				break
+			}
+		}
+
+		base := path.Base(tmplName)
+		if matched || strings.HasPrefix(base, "_") {
+			filtered = append(filtered, tmpl)
+			if strings.HasPrefix(base, "_") {
+				hasPartial = true
+			}
+			if matched && !strings.HasPrefix(base, "_") {
+				keep = true
+			}
+		}
+	}
+
+	current.Templates = filtered
+
+	deps := current.Dependencies()
+	if len(deps) > 0 {
+		keptDeps := make([]*chart.Chart, 0, len(deps))
+		for _, dep := range deps {
+			depKeep, err := applyProcessOnlyFilters(dep, patterns, matches, rootPrefix)
+			if err != nil {
+				return false, err
+			}
+			if depKeep {
+				keptDeps = append(keptDeps, dep)
+				keep = true
+			}
+		}
+		if len(keptDeps) != len(deps) {
+			current.SetDependencies(keptDeps...)
+		}
+	}
+
+	if hasPartial {
+		keep = true
+	}
+
+	return keep, nil
+}
+
 // renderResources renders the templates in a chart
 //
 // TODO: This function is badly in need of a refactor.

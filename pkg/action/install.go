@@ -113,7 +113,9 @@ type Install struct {
 	SkipSchemaValidation     bool
 	DisableOpenAPIValidation bool
 	IncludeCRDs              bool
-	Labels                   map[string]string
+	// ProcessOnly limits rendering to the provided template paths when set.
+	ProcessOnly []string
+	Labels      map[string]string
 	// KubeVersion allows specifying a custom kubernetes version to use and
 	// APIVersions allows a manual set of supported API Versions to be passed
 	// (for things like templating). These are ignored if ClientOnly is false
@@ -344,6 +346,23 @@ func (i *Install) RunWithContext(ctx context.Context, ch ci.Charter, vals map[st
 	valuesToRender, err := util.ToRenderValuesWithSchemaValidation(chrt, vals, options, caps, i.SkipSchemaValidation)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(i.ProcessOnly) > 0 {
+		normalized := make([]string, len(i.ProcessOnly))
+		for idx, tpl := range i.ProcessOnly {
+			normalized[idx] = filepath.ToSlash(tpl)
+		}
+		matches, err := filterProcessOnlyTemplates(chrt, normalized)
+		if err != nil {
+			return nil, err
+		}
+		for _, pattern := range normalized {
+			if !matches[pattern] {
+				return nil, fmt.Errorf("could not find template %s in chart", pattern)
+			}
+		}
+		i.ProcessOnly = normalized
 	}
 
 	if driver.ContainsSystemLabels(i.Labels) {

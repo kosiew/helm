@@ -1,4 +1,13 @@
 ---
+# Source: chart-with-template-with-invalid-yaml/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-config
+data:
+  mode: "process-only"
+
+---
 # Source: chart-with-template-with-invalid-yaml/templates/alpine-pod.yaml
 apiVersion: v1
 kind: Pod

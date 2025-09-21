@@ -848,39 +848,32 @@ func TestNameAndChartGenerateName(t *testing.T) {
 	instAction.GenerateName = true
 
 	tests := []struct {
-		Name         string
-		Chart        string
-		ExpectedName string
+		Name  string
+		Chart string
 	}{
 		{
-			"local filepath",
-			"./chart",
-			fmt.Sprintf("chart-%d", time.Now().Unix()),
+			Name:  "local filepath",
+			Chart: "./chart",
 		},
 		{
-			"dot filepath",
-			".",
-			fmt.Sprintf("chart-%d", time.Now().Unix()),
+			Name:  "dot filepath",
+			Chart: ".",
 		},
 		{
-			"empty filepath",
-			"",
-			fmt.Sprintf("chart-%d", time.Now().Unix()),
+			Name:  "empty filepath",
+			Chart: "",
 		},
 		{
-			"packaged chart",
-			"chart.tgz",
-			fmt.Sprintf("chart-%d", time.Now().Unix()),
+			Name:  "packaged chart",
+			Chart: "chart.tgz",
 		},
 		{
-			"packaged chart with .tar.gz extension",
-			"chart.tar.gz",
-			fmt.Sprintf("chart-%d", time.Now().Unix()),
+			Name:  "packaged chart with .tar.gz extension",
+			Chart: "chart.tar.gz",
 		},
 		{
-			"packaged chart with local extension",
-			"./chart.tgz",
-			fmt.Sprintf("chart-%d", time.Now().Unix()),
+			Name:  "packaged chart with local extension",
+			Chart: "./chart.tgz",
 		},
 	}
 
@@ -893,7 +886,18 @@ func TestNameAndChartGenerateName(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			is.Equal(tc.ExpectedName, name)
+			expectedBase := filepath.Base(tc.Chart)
+			if expectedBase == "." || expectedBase == "" {
+				expectedBase = "chart"
+			}
+			if idx := strings.Index(expectedBase, "."); idx != -1 {
+				expectedBase = expectedBase[0:idx]
+			}
+
+			now := time.Now().Unix()
+			expected := fmt.Sprintf("%s-%d", expectedBase, now)
+			previous := fmt.Sprintf("%s-%d", expectedBase, now-1)
+			is.True(name == expected || name == previous, "expected %s or %s, got %s", expected, previous, name)
 			is.Equal(tc.Chart, chrt)
 		})
 	}

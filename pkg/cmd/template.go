@@ -58,6 +58,7 @@ func newTemplateCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 	var kubeVersion string
 	var extraAPIs []string
 	var showFiles []string
+	var processFiles []string
 
 	cmd := &cobra.Command{
 		Use:   "template [NAME] [CHART]",
@@ -95,6 +96,14 @@ func newTemplateCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 			client.ClientOnly = !validate
 			client.APIVersions = common.VersionSet(extraAPIs)
 			client.IncludeCRDs = includeCrds
+
+			if len(processFiles) > 0 {
+				normalized := make([]string, len(processFiles))
+				for i, path := range processFiles {
+					normalized[i] = filepath.ToSlash(path)
+				}
+				client.ProcessOnly = normalized
+			}
 			rel, err := runInstall(args, client, valueOpts, out)
 
 			if err != nil && !settings.Debug {
@@ -195,6 +204,7 @@ func newTemplateCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 	f := cmd.Flags()
 	addInstallFlags(cmd, f, client, valueOpts)
 	f.StringArrayVarP(&showFiles, "show-only", "s", []string{}, "only show manifests rendered from the given templates")
+	f.StringArrayVarP(&processFiles, "process-only", "p", []string{}, "limit rendering to the specified templates (supports glob patterns)")
 	f.StringVar(&client.OutputDir, "output-dir", "", "writes the executed templates to files in output-dir instead of stdout")
 	f.BoolVar(&validate, "validate", false, "validate your manifests against the Kubernetes cluster you are currently pointing at. This is the same validation performed on an install")
 	f.BoolVar(&includeCrds, "include-crds", false, "include CRDs in the templated output")
@@ -204,6 +214,8 @@ func newTemplateCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 	f.StringSliceVarP(&extraAPIs, "api-versions", "a", []string{}, "Kubernetes api versions used for Capabilities.APIVersions (multiple can be specified)")
 	f.BoolVar(&client.UseReleaseName, "release-name", false, "use release name in the output-dir path.")
 	bindPostRenderFlag(cmd, &client.PostRenderer, settings)
+
+	cmd.MarkFlagsMutuallyExclusive("show-only", "process-only")
 
 	return cmd
 }

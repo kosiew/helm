@@ -134,6 +134,11 @@ func TestTemplateCmd(t *testing.T) {
 			golden:    "output/template-with-invalid-yaml-debug.txt",
 		},
 		{
+			name:   "template with process-only valid selection",
+			cmd:    fmt.Sprintf("template '%s' --process-only templates/configmap.yaml", "testdata/testcharts/chart-with-template-with-invalid-yaml"),
+			golden: "output/template-process-only.txt",
+		},
+		{
 			name:   "template skip-tests",
 			cmd:    fmt.Sprintf(`template '%s' --skip-tests`, chartPath),
 			golden: "output/template-skip-tests.txt",

@@ -1,0 +1,8 @@
+---
+# Source: chart-with-template-with-invalid-yaml/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-config
+data:
+  mode: "process-only"

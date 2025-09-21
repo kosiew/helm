@@ -59,6 +59,13 @@ including installing pre-releases.
 
 Get started with the [Quick Start guide](https://helm.sh/docs/intro/quickstart/) or plunge into the [complete documentation](https://helm.sh/docs).
 
+### Template command flags
+
+When using `helm template` to render charts locally, you can target specific templates without modifying the chart:
+
+- `--show-only <pattern>` limits the output to the rendered manifests whose paths match the supplied glob pattern(s).
+- `--process-only <pattern>` skips rendering templates that are not matched, which is helpful when a chart includes other templates that currently fail to render. This flag accepts multiple values and shares the same glob semantics as `--show-only`.
+
 ## Roadmap
 
 The [Helm roadmap uses GitHub milestones](https://github.com/helm/helm/milestones) to track the progress of the project.
