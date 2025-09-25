@@ -10,6 +10,53 @@
 - **Public API discipline:** packages under `pkg/` are part of the public SDK; avoid breaking exported APIs or behaviour. Prefer adding new symbols over changing or removing existing ones unless absolutely necessary. Use `internal/` for implementation details that can change freely.
 - **Dependencies:** standard linters block deprecated packages like `github.com/pkg/errors`. Prefer the Go standard library `errors` helpers.
 - **Tests:** follow existing patterns (table-driven tests, use `testing`, `require/assert` from `stretchr/testify` where already in use). Place golden fixtures in `testdata/` when needed.
+- **Refactoring style:**  
+  - When checking for the presence of a condition within slices or nested collections, prefer declarative helpers such as `slices.Contains` / `slices.ContainsFunc` over manual flag variables and nested loops.  
+    - Example (preferred):  
+      ```go
+      hasEdDSA := slices.ContainsFunc(signer.KeyRing, func(entity Entity) bool {
+          if entity.PrimaryKey != nil && entity.PrimaryKey.PubKeyAlgo == packet.PubKeyAlgoEdDSA {
+              return true
+          }
+          return slices.Contains(entity.Subkeys, func(subkey SubKey) bool {
+              return subkey.PublicKey != nil && subkey.PublicKey.PubKeyAlgo == packet.PubKeyAlgoEdDSA
+          })
+      })
+      ```
+      Instead of:  
+      ```go
+      hasEdDSA := false
+      for _, entity := range signer.KeyRing {
+          if entity.PrimaryKey != nil && entity.PrimaryKey.PubKeyAlgo == packet.PubKeyAlgoEdDSA {
+              hasEdDSA = true
+              break
+          }
+          for _, subkey := range entity.Subkeys {
+              if subkey.PublicKey != nil && subkey.PublicKey.PubKeyAlgo == packet.PubKeyAlgoEdDSA {
+                  hasEdDSA = true
+                  break
+              }
+          }
+          if hasEdDSA {
+              break
+          }
+      }
+      ```
+  - When writing tests, prefer using `testify/assert` (already in use in the repo) for clarity and brevity over manual `if` checks or `t.Fatalf` calls.  
+    - Example (preferred):  
+      ```go
+      assert.True(t, hasEdDSA)
+      assert.NotNil(t, signer.Entity)
+      ```
+      Instead of:  
+      ```go
+      if !hasEdDSA {
+          t.Fatalf("expected %s to include an Ed25519 public key", testMixedKeyring)
+      }
+      if signer.Entity == nil {
+          t.Fatalf("signer entity was nil")
+      }
+      ```
 
 ## Required checks before committing
 - Run Go unit tests for the areas you touched. The CI pipeline executes `make test-coverage` (per-package `go test` with coverage), so at minimum run `go test ./...` or `make test-coverage` locally.
