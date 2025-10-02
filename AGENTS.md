@@ -197,6 +197,25 @@ Functions performing I/O, crypto operations, or any cancellable work should acce
 ### 10) Small, targeted refactors
 
 Prefer many small refactors that are easy to review and revert rather than large sweeping changes. Each PR should be reviewable on its own merits.
+## Commenting guidance
+
+Keeping comments purposeful and consistent helps future maintainers. Prefer short, focused comments that fall into one of these three types:
+
+- Implementation Comments
+
+    - Explains non-obvious choices and tricky implementations
+    - Serves as breadcrumbs for future developers
+
+- Documentation Comments
+
+    - Describes functions, classes, and modules
+    - Acts as public interface documentation
+
+- Contextual Comments
+
+    - Documents assumptions, preconditions, and non-obvious requirements
+
+When adding comments, prefer clarity and keep them up to date; if code changes render a comment misleading, update or remove the comment.
 
 ## Required checks before committing
 
