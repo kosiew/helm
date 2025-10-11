@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//nolint:revive // allow package name 'common' for readability in this package
 package common
 
 // File represents a file as a name/value pair.

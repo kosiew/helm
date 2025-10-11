@@ -33,6 +33,7 @@ linters:
     - usetesting
 
   exclusions:
+  
     generated: lax
 
     presets:
@@ -67,11 +68,3 @@ run:
   timeout: 10m
 
 version: "2"
-
-issues:
-  exclude-rules:
-    - linters:
-        - revive
-      # Ignore revive's var-naming rule which flags short package names used
-      # intentionally across the repo (e.g., "util", "common").
-      text: "avoid meaningless package names"

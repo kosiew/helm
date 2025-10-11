@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//nolint:revive // allow package name 'util' for historical/consistency reasons
 package util
 
 import (

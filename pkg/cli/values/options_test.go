@@ -270,7 +270,6 @@ func TestMergeValuesExplicitEmptyOverrides(t *testing.T) {
 		{
 			name: "empty map from values file",
 			setup: func(t *testing.T) *Options {
-				t.Helper()
 				dir := t.TempDir()
 				file := filepath.Join(dir, "values.yaml")
 				require.NoError(t, os.WriteFile(file, []byte("key: {}\n"), 0o600))
@@ -279,8 +278,7 @@ func TestMergeValuesExplicitEmptyOverrides(t *testing.T) {
 		},
 		{
 			name: "empty map from set flag",
-			setup: func(t *testing.T) *Options {
-				t.Helper()
+			setup: func(_ *testing.T) *Options {
 				return &Options{Values: []string{"key={}"}}
 			},
 		},
